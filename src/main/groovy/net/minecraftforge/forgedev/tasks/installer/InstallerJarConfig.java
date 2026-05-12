@@ -110,15 +110,13 @@ public abstract class InstallerJarConfig extends DefaultTask {
 
         // If it's not, Check if the remote
         if (!pack) {
-            try {
-                // See if the remote hash is the same as ours
-                var remote = DownloadUtils.downloadString(artifact.url + ".sha1");
-                pack = !artifact.sha1.equals(remote);
-            } catch (FileNotFoundException e) {
+            // See if the remote hash is the same as ours
+            var remote = DownloadUtils.tryDownloadString(artifact.url + ".sha1");
+            if (remote == null) {
                 // The file doesn't exist, Mojang's maven doesn't include them, so assume it exists if it's on there.
                 pack = !artifact.url.startsWith("https://libraries.minecraft.net/");
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            } else {
+                pack = !artifact.sha1.equals(remote);
             }
         }
 

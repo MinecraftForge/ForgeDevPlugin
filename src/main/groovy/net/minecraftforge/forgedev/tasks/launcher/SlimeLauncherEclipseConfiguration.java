@@ -28,7 +28,6 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.jvm.toolchain.JavaLauncher;
-import org.gradle.plugins.ide.eclipse.model.EclipseModel;
 import org.gradle.workers.WorkAction;
 import org.gradle.workers.WorkParameters;
 import org.gradle.workers.WorkerExecutor;
@@ -53,7 +52,7 @@ import java.util.List;
 import java.util.Map;
 
 // This is mostly taken from ForgeGradle 6 but slimmed down to what we need
-abstract class SlimeLauncherEclipseConfiguration extends DefaultTask implements ForgeDevTask {
+public abstract class SlimeLauncherEclipseConfiguration extends DefaultTask implements ForgeDevTask {
     protected abstract @OutputFile RegularFileProperty getOutputFile();
 
     protected abstract @Input Property<String> getProjectName();
@@ -76,7 +75,7 @@ abstract class SlimeLauncherEclipseConfiguration extends DefaultTask implements 
 
     protected abstract @Internal DirectoryProperty getCacheDir();
 
-    protected abstract @InputFiles ConfigurableFileCollection getMetadata();
+    public abstract @InputFiles ConfigurableFileCollection getMetadata();
 
     protected abstract @Inject ObjectFactory getObjects();
 

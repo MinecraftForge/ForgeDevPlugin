@@ -4,10 +4,11 @@
  */
 package net.minecraftforge.forgedev.tasks.checks;
 
-import net.minecraftforge.forgedev.legacy.tasks.InheritanceData;
+import net.minecraftforge.forgedev.tasks.installertools.InheritanceData;
 import net.minecraftforge.srgutils.IMappingFile;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
@@ -41,6 +42,10 @@ public abstract class CheckATs extends CheckTask {
                 Files.writeString(at.toPath(), String.join("\n", lines), StandardCharsets.UTF_8);
             }
         }
+    }
+
+    public void mappings(Provider<?> provider) {
+
     }
 
     protected ATFile process(File file, Reporter reporter, Map<String, InheritanceData> inheritance) throws IOException {

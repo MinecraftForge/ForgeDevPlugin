@@ -6,7 +6,7 @@ package net.minecraftforge.forgedev.tasks.installer;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.minecraftforge.forgedev.legacy.tasks.Util;
+import net.minecraftforge.forgedev.Util;
 import net.minecraftforge.forgedev.legacy.values.LibraryInfo;
 import net.minecraftforge.forgedev.legacy.values.MavenInfo;
 import net.minecraftforge.forgedev.legacy.values.MinimalResolvedArtifact;

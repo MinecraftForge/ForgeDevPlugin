@@ -20,7 +20,7 @@ gradle.beforeProject { Project project ->
 
 //@formatter:off
 dependencyResolutionManagement.versionCatalogs.register('libs') {
-    version 'gradleutils', '3.4.4'
+    version 'gradleutils', '3.4.5'
 
     plugin 'licenser',       'net.minecraftforge.licenser'    version '1.2.0'
     plugin 'gradleutils',    'net.minecraftforge.gradleutils' versionRef 'gradleutils'
@@ -41,12 +41,15 @@ dependencyResolutionManagement.versionCatalogs.register('libs') {
     // Plugins
     library 'gradle-download', 'de.undercouch.download', 'de.undercouch.download.gradle.plugin' version '5.6.0'
 
+    // Access to git info, namely finding out version for the validation tasks
+    library 'jgit', 'org.eclipse.jgit:org.eclipse.jgit:7.6.0.202603022253-r'
+
     version 'asm', '9.8'
     library 'asm',      'org.ow2.asm', 'asm'      versionRef 'asm'
     library 'asm-tree', 'org.ow2.asm', 'asm-tree' versionRef 'asm'
     bundle 'asm', ['asm', 'asm-tree']
 
-    library 'srgutils',       'net.minecraftforge', 'srgutils'       version '0.5.14'
+    library 'srgutils',       'net.minecraftforge', 'srgutils'       version '0.6.2'
     library 'fastcsv',        'de.siegmar',         'fastcsv'        version '3.7.0'
     library 'jarjar',         'net.minecraftforge', 'JarJarMetadata' version '0.4.2'
     library 'maven-artifact', 'org.apache.maven',   'maven-artifact' version '3.8.8'

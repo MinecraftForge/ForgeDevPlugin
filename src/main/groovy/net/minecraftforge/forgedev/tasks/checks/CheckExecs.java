@@ -4,7 +4,6 @@
  */
 package net.minecraftforge.forgedev.tasks.checks;
 
-import net.minecraftforge.forgedev.legacy.tasks.Util;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.InputFile;
@@ -12,6 +11,7 @@ import org.gradle.api.tasks.InputFiles;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import java.io.FileInputStream;
@@ -102,8 +102,9 @@ public abstract class CheckExecs extends CheckTask {
         return ret;
     }
 
+    // TODO: [ForgeDev] Move away from ASM with Java 25 and classfile's
     private static ClassVisitor visitor(Consumer<String> known) {
-        return new ClassVisitor(Util.ASM_LEVEL) {
+        return new ClassVisitor(Opcodes.ASM9) {
             private String cls;
 
             @Override

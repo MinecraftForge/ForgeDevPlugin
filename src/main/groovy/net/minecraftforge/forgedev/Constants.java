@@ -4,10 +4,11 @@
  */
 package net.minecraftforge.forgedev;
 
-/// The package-private constants used throughout ForgeGradle.
-final class Constants {
+/// The constants used throughout ForgeGradle.
+public final class Constants {
     private Constants() { }
 
-    static final String FORGE_MAVEN = "https://maven.minecraftforge.net/";
-    static final String MAVEN_CENTRAL = "https://repo1.maven.org/maven2/";
+    public static final String FORGE_MAVEN = "https://maven.minecraftforge.net/";
+    public static final String FORGE_FILES = "https://files.minecraftforge.net/";
+    public static final String MAVEN_CENTRAL = "https://repo1.maven.org/maven2/";
 }

@@ -7,15 +7,18 @@ package net.minecraftforge.forgedev.tasks.shim;
 import net.minecraftforge.forgedev.ForgeDevExtension;
 import net.minecraftforge.forgedev.Tools;
 import net.minecraftforge.forgedev.legacy.tasks.DownloadDependency;
+import net.minecraftforge.forgedev.legacy.values.MavenInfo;
 import net.minecraftforge.gradleutils.shared.SharedUtil;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.language.base.plugins.LifecycleBasePlugin;
 import org.jetbrains.annotations.ApiStatus;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 
 public abstract class Shim {
     public static final String DEFAULT_NAME = "serverShim";
@@ -70,9 +73,20 @@ public abstract class Shim {
         base.configure(task -> task.setArtifact(artifact) );
     }
 
+    public void bootstrapClasspath(Configuration cfg) {
+        jar(task -> {
+            var deps = new ArrayList<String>();
+            for (var dep : cfg.getIncoming().getArtifacts()) {
+                var info = MavenInfo.from(project, dep);
+                deps.add("libraries/" + info.path());
+            }
+            task.getManifest().getAttributes().put("Class-Path", String.join(" ", deps));
+        });
+    }
+
     @ApiStatus.Internal
     public static Shim register(Project project, ForgeDevExtension ext, String name) {
-        var base = DownloadDependency.register(project, name + "DownloadBase", Tools.SHIM.getModule().toString());
+        var base = project.getTasks().register(name + "DownloadBase", DownloadDependency.class);
 
         var classpath = project.getTasks().register(name + "Classpath", ShimClasspath.class);
         classpath.configure(task -> task.setGroup("Generation"));
@@ -94,10 +108,16 @@ public abstract class Shim {
             });
 
             // And set the base manifest
-            var baseManifest = baseZip.map(tree -> tree.getFiles().stream().filter(f -> f.getName().equals("MANIFEST.MF")).findFirst().orElseThrow());
+            task.dependsOn(base);
+            var text = project.getResources().getText();
+            var baseManifest = base.flatMap(DownloadDependency::getOutput).map(file -> text.fromArchiveEntry(file, "META-INF/MANIFEST.MF", "utf-8"));
             task.manifest(manifest -> manifest.from(baseManifest));
         });
 
-        return project.getObjects().newInstance(Shim.class, project, name, classpath, jar, base, config);
+        var ret = project.getObjects().newInstance(Shim.class, project, name, classpath, jar, base, config);
+
+        ret.setBase(Tools.SHIM.getModule().toString());
+
+        return ret;
     }
 }

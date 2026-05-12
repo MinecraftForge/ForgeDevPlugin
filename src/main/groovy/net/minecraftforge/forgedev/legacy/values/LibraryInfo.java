@@ -4,7 +4,8 @@
  */
 package net.minecraftforge.forgedev.legacy.values;
 
-import net.minecraftforge.forgedev.legacy.tasks.Util;
+import net.minecraftforge.forgedev.Util;
+import net.minecraftforge.util.hash.HashFunction;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.Transformer;
@@ -12,12 +13,10 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.AbstractArchiveTask;
-import org.gradle.plugins.ide.eclipse.model.Library;
 
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +54,7 @@ public record LibraryInfo(String name, Downloads downloads) implements Serializa
     }
 
     public LibraryInfo(MavenInfo info, File file, String url) {
-        this(info.name(), info.path(), url, Util.sha1(file), file.length());
+        this(info.name(), info.path(), url, HashFunction.SHA1.sneakyHash(file), file.length());
     }
 
     public LibraryInfo validateUrl(boolean offline) {
@@ -81,7 +80,7 @@ public record LibraryInfo(String name, Downloads downloads) implements Serializa
             url = "https://maven.minecraftforge.net/" + info.path();
 
         var file = dependency.file();
-        var sha1 = Util.sha1(dependency.file());
+        var sha1 = HashFunction.SHA1.sneakyHash(dependency.file());
 
         return new LibraryInfo(
             info.name(),

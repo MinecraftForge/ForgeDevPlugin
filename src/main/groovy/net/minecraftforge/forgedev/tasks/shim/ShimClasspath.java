@@ -5,10 +5,10 @@
 package net.minecraftforge.forgedev.tasks.shim;
 
 import net.minecraftforge.forgedev.ForgeDevTask;
-import net.minecraftforge.forgedev.legacy.tasks.Util;
 import net.minecraftforge.forgedev.legacy.values.MavenInfo;
 import net.minecraftforge.forgedev.legacy.values.MinimalResolvedArtifact;
 import net.minecraftforge.forgedev.tasks.SingleFileOutput;
+import net.minecraftforge.util.hash.HashFunction;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -66,7 +66,7 @@ public abstract class ShimClasspath extends DefaultTask implements ForgeDevTask,
             var key = info.group() + ':' + info.name();
             if (info.classifier() != null)
                 key += ':' + info.classifier();
-            entries.put(key, Util.sha256(lib.file()) + '\t' + lib.info().name() + '\t' + lib.info().path());
+            entries.put(key, HashFunction.SHA256.hash(lib.file()) + '\t' + lib.info().name() + '\t' + lib.info().path());
         }
 
         // Copy from vanilla if we don't overwrite the version

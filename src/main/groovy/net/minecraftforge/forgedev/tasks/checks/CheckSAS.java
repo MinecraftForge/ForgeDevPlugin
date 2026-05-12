@@ -4,8 +4,8 @@
  */
 package net.minecraftforge.forgedev.tasks.checks;
 
-import net.minecraftforge.forgedev.legacy.tasks.InheritanceData;
-import net.minecraftforge.forgedev.legacy.tasks.InheritanceDataAnnotatable;
+import net.minecraftforge.forgedev.tasks.installertools.InheritanceData;
+import net.minecraftforge.forgedev.tasks.installertools.InheritanceDataAnnotatable;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;

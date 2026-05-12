@@ -6,15 +6,18 @@ package net.minecraftforge.forgedev.tasks.installer;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.minecraftforge.forgedev.legacy.tasks.Util;
+import net.minecraftforge.forgedev.Util;
 import net.minecraftforge.forgedev.legacy.values.LibraryInfo;
 import net.minecraftforge.forgedev.legacy.values.MinimalResolvedArtifact;
+import net.minecraftforge.forgedev.tasks.SingleFileOutput;
 import net.minecraftforge.forgedev.tasks.installer.steps.Extract;
 import net.minecraftforge.forgedev.tasks.installer.steps.ExtractBundle;
 import net.minecraftforge.forgedev.tasks.installer.steps.Step;
+import net.minecraftforge.util.hash.HashFunction;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
@@ -26,6 +29,7 @@ import org.gradle.api.tasks.*;
 import org.gradle.api.tasks.bundling.AbstractArchiveTask;
 
 import javax.inject.Inject;
+import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Files;
@@ -119,11 +123,20 @@ public abstract class InstallerJson extends DefaultTask {
         this.getData().put(key, new Data(client, server));
     }
 
-    public void data(String key, RegularFileProperty client, RegularFileProperty server) {
-        this.getData().put(key, client.zip(server, (l, r) -> new Data(
-            "'" + Util.sha1(client.get().getAsFile()) + "'",
-            "'" + Util.sha1(server.get().getAsFile()) + "'"
-        )));
+    public void data(String key, Provider<?> client, Provider<?> server) {
+        this.getData().put(key, client.zip(server, (l, r) -> new Data(convert(l), convert(r))));
+    }
+
+    private static String convert(Object obj) {
+        if (obj instanceof String           value) return value;
+        if (obj instanceof RegularFile      value) return hash(value.getAsFile());
+        if (obj instanceof File             value) return hash(value);
+        if (obj instanceof SingleFileOutput value) return hash(value.getOutput().getAsFile().get());
+        throw new IllegalArgumentException("Cannot convert object of type " + obj.getClass() + " to data entry: " + obj);
+    }
+
+    private static String hash(File file) {
+        return '\'' + HashFunction.SHA1.sneakyHash(file) + '\'';
     }
 
     @TaskAction

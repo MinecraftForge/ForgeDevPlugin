@@ -235,7 +235,7 @@ public abstract class SlimeLauncherOptionsImpl implements SlimeLauncherOptionsIn
 
     @Override
     public void environment(String name, Object value) {
-        this.getSystemProperties().put(name, this.getProviders().provider(() -> Util.unpack(value).toString()));
+        this.getEnvironment().put(name, this.getProviders().provider(() -> Util.unpack(value).toString()));
     }
 
     @Override

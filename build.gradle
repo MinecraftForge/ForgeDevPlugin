@@ -89,11 +89,6 @@ gradlePlugin {
             tags = ['minecraftforge']
         }
 
-        register('forge') {
-            id = 'net.minecraftforge.forge.build.forge'
-            implementationClass = 'net.minecraftforge.forgedev.legacy.ForgeBuildPlugin'
-        }
-
         register('convention') {
             id = 'net.minecraftforge.forge.build.convention'
             implementationClass = 'net.minecraftforge.forgedev.legacy.SharedBuildPlugin'

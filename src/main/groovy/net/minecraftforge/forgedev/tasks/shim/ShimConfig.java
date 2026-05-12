@@ -4,7 +4,7 @@
  */
 package net.minecraftforge.forgedev.tasks.shim;
 
-import net.minecraftforge.forgedev.legacy.tasks.CleanProperties;
+import net.minecraftforge.forgedev.CleanProperties;
 import net.minecraftforge.forgedev.tasks.SingleFileOutput;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.ProjectLayout;

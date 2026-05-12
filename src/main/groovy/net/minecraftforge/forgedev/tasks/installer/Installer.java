@@ -7,15 +7,19 @@ package net.minecraftforge.forgedev.tasks.installer;
 import net.minecraftforge.forgedev.ForgeDevExtension;
 import net.minecraftforge.forgedev.Tools;
 import net.minecraftforge.forgedev.legacy.tasks.DownloadDependency;
-import net.minecraftforge.forgedev.legacy.tasks.Util;
+import net.minecraftforge.forgedev.Util;
 import net.minecraftforge.forgedev.legacy.values.LibraryInfo;
 import net.minecraftforge.forgedev.legacy.values.MavenInfo;
 import net.minecraftforge.forgedev.legacy.values.MinimalResolvedArtifact;
 import net.minecraftforge.forgedev.tasks.SingleFileOutput;
+import net.minecraftforge.forgedev.values.MavenArtifact;
 import net.minecraftforge.gradleutils.shared.SharedUtil;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.artifacts.MinimalExternalModuleDependency;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
@@ -26,6 +30,7 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public abstract class Installer {
@@ -50,6 +55,8 @@ public abstract class Installer {
     public abstract Property<Boolean> getDev();
     @Input
     public abstract Property<Boolean> getOffline();
+
+    protected abstract @Inject ObjectFactory getObjects();
 
     @Inject
     public Installer(Project project, String name, TaskProvider<InstallerJar> jar, TaskProvider<InstallerJarConfig> jarConfig, TaskProvider<InstallerJson> json, TaskProvider<LauncherJson> launcherJson, TaskProvider<DownloadDependency> base) {
@@ -86,11 +93,19 @@ public abstract class Installer {
         getLauncherJson().configure(action);
     }
 
-    public Tool tool(Object dependency) {
+    public Tool tool(Provider<Dependency> dependency) {
         return tool(dependency, true);
     }
-    public Tool tool(Object dependency, boolean transitive) {
-        var gav = Util.asArtifactString(dependency);
+    public Tool tool(Provider<Dependency> dependency, boolean transitive) {
+        return tool(MavenArtifact.from(getObjects(), dependency).get().getDescriptor(), transitive);
+    }
+    public Tool tool(Dependency dependency) {
+        return tool(dependency, true);
+    }
+    public Tool tool(Dependency dependency, boolean transitive) {
+        return tool(MavenArtifact.from(getObjects(), dependency).getDescriptor(), transitive);
+    }
+    private Tool tool(String gav, boolean transitive) {
         var tree = MinimalResolvedArtifact.from(project, gav, transitive).get();
         this.jarConfig.configure(task -> {
             for (var artifact : tree)
@@ -163,7 +178,6 @@ public abstract class Installer {
         this.jarConfig.configure(task -> task.library(info, action));
     }
 
-
     /// Helper to set the base installer to Forge's this is meant to make it easy to do something like:
     /// installer {
     ///   baseVersion = "1.0"
@@ -190,7 +204,7 @@ public abstract class Installer {
         var holder = new Holder();
         var self = project.getProviders().provider(() -> holder.value);
 
-        var base = DownloadDependency.register(project, name + "DownloadBase", Tools.INSTALLER.getModule().toString());
+        var base = tasks.register(name + "DownloadBase", DownloadDependency.class);
         var jarConfig = tasks.register(name + "JarConfig", InstallerJarConfig.class, self, base);
         var jar = tasks.register(name + "Jar", InstallerJar.class);
         var json = tasks.register(name + "Json", InstallerJson.class);
@@ -211,11 +225,9 @@ public abstract class Installer {
                 launcherJson
             );
 
-            // Get the base as a Provider
             task.dependsOn(base);
-            var baseZip = project.getProviders().provider(() -> project.zipTree(base.flatMap(DownloadDependency::getOutput)));
-            // And set the base manifest
-            var baseManifest = baseZip.map(tree -> tree.getFiles().stream().filter(f -> f.getName().equals("MANIFEST.MF")).findFirst().orElseThrow());
+            var text = project.getResources().getText();
+            var baseManifest = base.flatMap(DownloadDependency::getOutput).map(file -> text.fromArchiveEntry(file, "META-INF/MANIFEST.MF", "utf-8"));
             task.manifest(manifest -> manifest.from(baseManifest));
         });
 
@@ -226,6 +238,8 @@ public abstract class Installer {
         launcherJson.configure(task -> {
             task.getOutput().set(baseDir.file("version.json"));
         });
+
+        ret.setBase(Tools.INSTALLER.getModule().toString());
 
         return ret;
     }

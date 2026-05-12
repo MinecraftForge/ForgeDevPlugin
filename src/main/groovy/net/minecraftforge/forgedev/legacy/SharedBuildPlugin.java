@@ -4,13 +4,14 @@
  */
 package net.minecraftforge.forgedev.legacy;
 
-import net.minecraftforge.forgedev.legacy.tasks.Util;
-import net.minecraftforge.forgedev.legacy.tasks.WriteManifest;
+import net.minecraftforge.forgedev.tasks.WriteManifest;
+import net.minecraftforge.forgedev.publishvalidate.ValidatePublish;
 import net.minecraftforge.gradleutils.shared.SharedUtil;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.plugins.JavaPluginExtension;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
@@ -25,10 +26,6 @@ import javax.inject.Inject;
 import java.util.List;
 
 abstract class SharedBuildPlugin implements Plugin<Project> {
-    static {
-        Util.init();
-    }
-
     protected abstract @Inject ProjectLayout getLayout();
 
     @Inject
@@ -38,8 +35,6 @@ abstract class SharedBuildPlugin implements Plugin<Project> {
     public void apply(Project project) {
         project.setGroup("net.minecraftforge");
 
-        var layout = getLayout();
-
         var tasks = project.getTasks();
 
         var generateResources = SharedUtil.runFirst(project, tasks.register("generateResources"));
@@ -48,21 +43,41 @@ abstract class SharedBuildPlugin implements Plugin<Project> {
         );
 
         project.getPluginManager().withPlugin("java", javaAppliedPlugin -> {
+            var java = project.getExtensions().getByType(JavaPluginExtension.class);
             tasks.withType(Javadoc.class).configureEach(task -> {
+                task.setFailOnError(false);
                 task.options(minimalOptions -> {
                     if (minimalOptions instanceof CoreJavadocOptions coreOptions) {
                         coreOptions.setMemberLevel(JavadocMemberLevel.PUBLIC);
-                        coreOptions.addBooleanOption("Xdoclint:all", true);
-                        coreOptions.addBooleanOption("-Xdoclint:missing", true);
+                        coreOptions.addBooleanOption("Xdoclint:all,-missing", true);
                     }
                 });
             });
 
             tasks.withType(JavaCompile.class).configureEach(task -> {
+                task.dependsOn(processResources);
                 var options = task.getOptions();
                 options.setWarnings(false); // Shutup deprecated for removal warnings
                 options.getForkOptions().setMemoryMaximumSize("6G"); // Needed to make compiling faster, and not run out of heap space in some cases.
             });
+            tasks.withType(Jar.class).configureEach(task -> {
+                // This is a dirty hack, but there is no way for us to figure out what are just the tasks we want, as they are registered lazily
+                // in a way that I have not found a way to react to
+                for (var sourceSet : java.getSourceSets()) {
+                    if (
+                        task.getName().equals(sourceSet.getCompileJavaTaskName()) ||
+                        task.getName().equals(sourceSet.getSourcesJarTaskName()) ||
+                        task.getName().equals(sourceSet.getProcessResourcesTaskName())
+                    ) {
+                        task.dependsOn(processResources);
+                        return;
+                    }
+                }
+            });
+
+            // Write the manifest to our resources directory because we use it for version information
+            var writeManifest = WriteManifest.register(project, tasks.named("jar", Jar.class));
+            generateResources.configure(task -> task.dependsOn(writeManifest));
         });
 
         project.getPluginManager().withPlugin("eclipse", eclipseAppliedPlugin -> {
@@ -75,31 +90,6 @@ abstract class SharedBuildPlugin implements Plugin<Project> {
             );
         });
 
-        project.afterEvaluate(this::finish);
-    }
-
-    private void finish(Project project) {
-        var tasks = project.getTasks();
-
-        var jar = project.getPluginManager().hasPlugin("net.minecraftforge.forgedev") ? "universalJar" : "jar";
-        WriteManifest.register(project, tasks.named(jar, Jar.class));
-
-        for (var sourceSet : project.getExtensions().getByType(JavaPluginExtension.class).getSourceSets()) {
-            var existing = tasks.getNames();
-            if (!existing.contains(sourceSet.getSourcesJarTaskName())
-                || !existing.contains(sourceSet.getProcessResourcesTaskName()))
-                continue;
-
-            var processResources = tasks.named(sourceSet.getProcessResourcesTaskName());
-            var names = List.of(
-                sourceSet.getCompileJavaTaskName(),
-                sourceSet.getCompileTaskName("groovy"),
-                sourceSet.getSourcesJarTaskName()
-            );
-            for (var name : names) {
-                if (existing.contains(name))
-                    tasks.named(name, task -> task.dependsOn(processResources));
-            }
-        }
+        project.getPluginManager().withPlugin("maven-publish", maven -> ValidatePublish.onApplyMavenPublish(project));
     }
 }

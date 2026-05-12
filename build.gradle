@@ -117,6 +117,7 @@ publishing {
 
             developers {
                 developer gradleutils.pom.developers.Jonathing
+                developer gradleutils.pom.developers.LexManos
             }
         }
     }

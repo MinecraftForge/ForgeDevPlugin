@@ -24,7 +24,7 @@ public class ValidatePublish {
     static final String TASK_NAME = NAME + "Published";
 
     private static boolean enabled(Project project) {
-        return "true".equalsIgnoreCase(project.getProviders().gradleProperty("net.minecraftforge.forgedev.validate.publish").get());
+        return "true".equalsIgnoreCase(project.getProviders().gradleProperty("net.minecraftforge.forgedev.validate.publish").getOrElse("false"));
     }
     // Creates a consumable {NAME} configuration, with the usage of {NAME}
     // and forces all publication tasks publish to a flat folder in our builder folder

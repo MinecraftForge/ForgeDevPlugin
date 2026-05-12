@@ -24,9 +24,9 @@ public abstract class BaseDiffPatchExec extends ToolExec implements SingleFileOu
     /* CLI FLAGS - See io.codechicken.diffpatch.cli.DiffPatchCli#mainI, or run --help on the fat jar */
 
     // Utility
-    public abstract @Input @Console Property<Boolean> getVerbose();
-    public abstract @Input @Optional @Console Property<String> getLogLevel();
-    public abstract @Input @Console Property<Boolean> getSummary();
+    public abstract @Console Property<Boolean> getVerbose();
+    public abstract @Console Property<String> getLogLevel();
+    public abstract @Console Property<Boolean> getSummary();
 
     public abstract @InputFiles ConfigurableFileCollection getInput();
 
@@ -43,6 +43,7 @@ public abstract class BaseDiffPatchExec extends ToolExec implements SingleFileOu
     protected BaseDiffPatchExec() {
         super(Tools.DIFFPATCH);
         this.getOutput().convention(this.getDefaultOutputFile());
+        this.getLogLevel().convention("INFO");
         this.getVerbose().convention(false);
         this.getSummary().convention(false);
     }

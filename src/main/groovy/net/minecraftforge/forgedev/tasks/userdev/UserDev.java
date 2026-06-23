@@ -122,8 +122,10 @@ public abstract class UserDev {
     private void configureBinaryPatches(CreateBinPatches task) {
         if (this.patcherBase instanceof MCPBase mcp) {
             task.getClean().setFrom(mcp.getClasses());
-            task.getSrg().setFrom(mcp.getMap2Srg());
-            task.getReverseSrg().set(true);
+            if (Util.isObfuscated(mcp.getMcpVersion().get())) {
+                task.getSrg().setFrom(mcp.getMap2Srg());
+                task.getReverseSrg().set(true);
+            }
             task.getSas().setFrom(mcp.getSideAnnotationStrippers());
             task.getDirty().setFrom(this.project.getTasks().named("jar"));
         }

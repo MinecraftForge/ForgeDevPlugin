@@ -97,7 +97,7 @@ public abstract class MCPBaseImpl implements MCPBase {
 
     @Override
     public Provider<File> getClasses() {
-        return this.mavenizer.getClasses().orElse(this.getClassesRaw());
+        return this.mavenizer.getClasses();
     }
 
     @Override

@@ -110,6 +110,11 @@ public abstract class MCPData extends MavenizerData {
     }
 
     public Provider<File> getClasses() {
+        return this.optional("classes.srg").orElse(get("classes.raw")).map( path ->
+            getOutputDir() == null ? project.file(path) : new File(getOutputDir(), path)
+        );
+    }
+    public Provider<File> getClassesSrg() {
         return getFile("classes.srg");
     }
     public Provider<File> getClassesRaw() {

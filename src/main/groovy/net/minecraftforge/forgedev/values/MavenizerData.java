@@ -57,6 +57,10 @@ public abstract class MavenizerData {
         return null;
     }
 
+    protected Provider<String> optional(String key) {
+        return this.data.getting(key);
+    }
+
     protected Provider<String> get(String key) {
         return this.data.getting(key).orElse(getProviders().provider(() -> {
             throw new IllegalStateException("Mavenizer did not output expected json data " + key);

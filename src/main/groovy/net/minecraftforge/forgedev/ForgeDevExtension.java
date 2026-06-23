@@ -454,8 +454,10 @@ public abstract class ForgeDevExtension {
                 });
                 ret.create(task -> {
                     task.getClean().setFrom(this.base.getClasses());
-                    task.getSrg().setFrom(this.base.getMap2Srg());
-                    task.getReverseSrg().set(true);
+                    if (Util.isObfuscated(this.base.getMcpVersion().get())) {
+                        task.getSrg().setFrom(this.base.getMap2Srg());
+                        task.getReverseSrg().set(true);
+                    }
                     task.getSas().setFrom(this.base.getSideAnnotationStrippers());
                     task.getDirty().setFrom(this.project.getTasks().named("jar"));
                 });

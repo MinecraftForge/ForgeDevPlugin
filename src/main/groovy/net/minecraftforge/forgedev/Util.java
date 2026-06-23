@@ -178,9 +178,8 @@ public final class Util extends SharedUtil {
     }
 
     public static String iso8601(Date self) {
-        var format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
-        var result = format.format(self);
-        return result.substring(0, 22) + ':' + result.substring(22);
+        var format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
+        return format.format(self);
     }
 
     public static <R extends HasConfigurableValue> R finalize(Project project, R ret) {

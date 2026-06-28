@@ -199,7 +199,7 @@ public abstract class ForgeDevExtension {
     public NamedDomainObjectContainer<? extends Run> getRuns() {
         if (this.runs == null) {
             this.runs = this.getObjects().domainObjectContainer(Run.class, name ->
-                getObjects().newInstance(Run.class, name, this.project, getGenEclipseRuns(), getMcpBase().getMcpVersion().get())
+                getObjects().newInstance(Run.class, name, this.project, getGenEclipseRuns(), getMcpBase().getMcpVersion().get(), getMcpBase().getMetadata())
             );
         }
         return this.runs;

@@ -124,4 +124,9 @@ public abstract class MCPBaseImpl implements MCPBase {
     public Provider<File> getExtra() {
         return this.mavenizer.getExtra();
     }
+
+    @Override
+    public Provider<File> getMetadata() {
+        return this.mavenizer.getMetadata();
+    }
 }

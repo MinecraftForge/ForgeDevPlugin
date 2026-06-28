@@ -34,11 +34,11 @@ public abstract class Run implements Named {
     protected abstract @Inject ObjectFactory getObjects();
 
     @Inject
-    public Run(String name, Project project, TaskProvider<?> genEclipseRuns, String version) {
+    public Run(String name, Project project, TaskProvider<?> genEclipseRuns, String version, Provider<File> metadataProvider) {
         this.name = name;
         this.project = project;
         this.options = getObjects().newInstance(SlimeLauncherOptionsImpl.class, name);
-        var metadata = getDefaultMetadata(project, version);
+        var metadata = getObjects().fileCollection().from(metadataProvider);
 
         var java = project.getExtensions().getByType(JavaPluginExtension.class);
         var main = java.getSourceSets().named(SourceSet.MAIN_SOURCE_SET_NAME).get();
@@ -49,18 +49,6 @@ public abstract class Run implements Named {
 
         this.run = SlimeLauncherExec.register(project, main, options, version, metadata);
         this.runTest = SlimeLauncherExec.register(project, test, options, version, metadata);
-    }
-
-    private FileCollection getDefaultMetadata(Project project, String version) {
-        // This is hardcoded and im not a fan of it, but requires a bunch of work to change
-        // I'm thinking we add 'metadata' to options which we fill with a PatcherBase
-        // For now just hardcode this as joined
-        var metadataDep = project.getDependencyFactory().create("net.minecraft", "joined", version, "metadata", "zip");
-        var metadataAttr = getObjects().named(Usage.class, "metadata");
-        var metadataConfiguration = project.getConfigurations().detachedConfiguration(metadataDep);
-        metadataConfiguration.setTransitive(false);
-        metadataConfiguration.attributes(a -> a.attribute(Usage.USAGE_ATTRIBUTE, metadataAttr));
-        return metadataConfiguration;
     }
 
     @Override

@@ -26,6 +26,5 @@ public interface PatcherBase {
     Provider<File> getObf2Srg();
     Provider<File> getMap2Srg();
     Provider<File> getMappingZip();
-
-
+    Provider<File> getMetadata();
 }

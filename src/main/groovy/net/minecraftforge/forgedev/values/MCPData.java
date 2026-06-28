@@ -89,6 +89,9 @@ public abstract class MCPData extends MavenizerData {
     public Provider<File> getExtra() {
         return getFile("extra");
     }
+    public Provider<File> getMetadata() {
+        return getFile("metadata");
+    }
 
     public Provider<String> getMappingChannel() {
         return get("mappings.channel");

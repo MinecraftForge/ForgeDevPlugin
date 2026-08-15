@@ -11,6 +11,7 @@ import net.minecraftforge.forgedev.Util;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.Property;
@@ -34,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 
 public abstract class SlimeLauncherExec extends JavaExec implements ForgeDevTask, HasPublicType {
-    public static TaskProvider<SlimeLauncherEclipseConfiguration> registerEclipse(Project project, SourceSet sourceSet, SlimeLauncherOptionsImpl options, String version, FileCollection metadata, TaskProvider<?> genEclipseRuns) {
+    public static TaskProvider<SlimeLauncherEclipseConfiguration> registerEclipse(Project project, SourceSet sourceSet, SlimeLauncherOptionsImpl options, TaskProvider<?> genEclipseRuns) {
         var generateEclipseRunTaskName = sourceSet.getTaskName("genEclipseRun", options.getName());
         var runTaskName = sourceSet.getTaskName("run", options.getName());
 
@@ -64,18 +65,13 @@ public abstract class SlimeLauncherExec extends JavaExec implements ForgeDevTask
                 }));
 
             task.getSourceSetName().set(sourceSet.getName());
-
-            var caches = task.getObjects().directoryProperty().value(task.globalCaches().dir("slime-launcher/cache/%s".formatted(version)));
-            task.getCacheDir().set(caches.map(task.problems.ensureFileLocation()));
-            task.getMetadata().setFrom(metadata);
-
             task.getOptions().set(options);
         });
         genEclipseRuns.configure(task -> task.dependsOn(genEclipseRun));
         return genEclipseRun;
     }
 
-    public static TaskProvider<SlimeLauncherExec> register(Project project, SourceSet sourceSet, SlimeLauncherOptionsImpl options, String version, FileCollection metadata) {
+    public static TaskProvider<SlimeLauncherExec> register(Project project, SourceSet sourceSet, SlimeLauncherOptionsImpl options) {
         var runTaskName = sourceSet.getTaskName("run", options.getName());
         return project.getTasks().register(runTaskName, SlimeLauncherExec.class, task -> {
             task.getRunName().set(options.getName());
@@ -83,11 +79,6 @@ public abstract class SlimeLauncherExec extends JavaExec implements ForgeDevTask
             task.setDescription("Runs the '%s' Slime Launcher run configuration.".formatted(options.getName()));
 
             task.classpath(task.getObjectFactory().fileCollection().from(task.getProviderFactory().provider(sourceSet::getRuntimeClasspath)));
-
-            var caches = task.getObjectFactory().directoryProperty().value(task.globalCaches().dir("slime-launcher/cache/%s".formatted(version)));
-            task.getCacheDir().set(caches.map(task.problems.ensureFileLocation()));
-            task.getMetadata().setFrom(metadata);
-
             task.getOptions().set(options);
         });
     }
@@ -98,7 +89,7 @@ public abstract class SlimeLauncherExec extends JavaExec implements ForgeDevTask
 
     protected abstract @Nested Property<SlimeLauncherOptions> getOptions();
 
-    protected abstract @Internal DirectoryProperty getCacheDir();
+    public abstract @Internal DirectoryProperty getCacheDir();
 
     public abstract @InputFiles ConfigurableFileCollection getMetadata();
 

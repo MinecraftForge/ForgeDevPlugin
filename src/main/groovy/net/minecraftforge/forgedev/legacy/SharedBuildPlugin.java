@@ -37,12 +37,12 @@ abstract class SharedBuildPlugin implements Plugin<Project> {
 
         var tasks = project.getTasks();
 
-        var generateResources = SharedUtil.runFirst(project, tasks.register("generateResources"));
-        var processResources = tasks.named("processResources", ProcessResources.class, task ->
-            task.dependsOn(generateResources)
-        );
-
         project.getPluginManager().withPlugin("java", javaAppliedPlugin -> {
+            var generateResources = SharedUtil.runFirst(project, tasks.register("generateResources"));
+            var processResources = tasks.named("processResources", ProcessResources.class, task ->
+                task.dependsOn(generateResources)
+            );
+
             var java = project.getExtensions().getByType(JavaPluginExtension.class);
             tasks.withType(Javadoc.class).configureEach(task -> {
                 task.setFailOnError(false);
@@ -78,16 +78,15 @@ abstract class SharedBuildPlugin implements Plugin<Project> {
             // Write the manifest to our resources directory because we use it for version information
             var writeManifest = WriteManifest.register(project, tasks.named("jar", Jar.class));
             generateResources.configure(task -> task.dependsOn(writeManifest));
-        });
 
-        project.getPluginManager().withPlugin("eclipse", eclipseAppliedPlugin -> {
-            var eclipse = project.getExtensions().getByType(EclipseModel.class);
-
-            eclipse.synchronizationTasks(
-                processResources,
-                tasks.named("eclipseClasspath", GenerateEclipseClasspath.class),
-                tasks.named("eclipseProject", GenerateEclipseProject.class)
-            );
+            project.getPluginManager().withPlugin("eclipse", eclipseAppliedPlugin -> {
+                var eclipse = project.getExtensions().getByType(EclipseModel.class);
+                eclipse.synchronizationTasks(
+                    processResources,
+                    tasks.named("eclipseClasspath", GenerateEclipseClasspath.class),
+                    tasks.named("eclipseProject", GenerateEclipseProject.class)
+                );
+            });
         });
 
         project.getPluginManager().withPlugin("maven-publish", maven -> ValidatePublish.onApplyMavenPublish(project));

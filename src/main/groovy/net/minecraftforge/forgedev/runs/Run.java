@@ -4,6 +4,7 @@
  */
 package net.minecraftforge.forgedev.runs;
 
+import net.minecraftforge.forgedev.ForgeDevExtension;
 import net.minecraftforge.forgedev.tasks.launcher.SlimeLauncherEclipseConfiguration;
 import net.minecraftforge.forgedev.tasks.launcher.SlimeLauncherExec;
 import net.minecraftforge.forgedev.tasks.launcher.SlimeLauncherOptions;
@@ -12,6 +13,8 @@ import org.gradle.api.Action;
 import org.gradle.api.Named;
 import org.gradle.api.Project;
 import org.gradle.api.attributes.Usage;
+import org.gradle.api.file.Directory;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaPluginExtension;
@@ -24,6 +27,7 @@ import java.io.File;
 
 public abstract class Run implements Named {
     private final String name;
+    private final ForgeDevExtension extension;
     private final Project project;
     private final SlimeLauncherOptionsImpl options;
     private final TaskProvider<SlimeLauncherEclipseConfiguration> eclipse;
@@ -31,24 +35,32 @@ public abstract class Run implements Named {
     private final TaskProvider<SlimeLauncherExec> run;
     private final TaskProvider<SlimeLauncherExec> runTest;
 
+    private final DirectoryProperty cacheDir = this.getObjects().directoryProperty();
+
     protected abstract @Inject ObjectFactory getObjects();
 
     @Inject
-    public Run(String name, Project project, TaskProvider<?> genEclipseRuns, String version, Provider<File> metadataProvider) {
+    public Run(String name, ForgeDevExtension extension, Project project, TaskProvider<?> genEclipseRuns) {
         this.name = name;
+        this.extension = extension;
         this.project = project;
         this.options = getObjects().newInstance(SlimeLauncherOptionsImpl.class, name);
-        var metadata = getObjects().fileCollection().from(metadataProvider);
 
         var java = project.getExtensions().getByType(JavaPluginExtension.class);
         var main = java.getSourceSets().named(SourceSet.MAIN_SOURCE_SET_NAME).get();
         var test = java.getSourceSets().named(SourceSet.TEST_SOURCE_SET_NAME).get();
 
-        this.eclipse = SlimeLauncherExec.registerEclipse(project, main, options, version, metadata, genEclipseRuns);
-        this.eclipseTest = SlimeLauncherExec.registerEclipse(project, test, options, version, metadata, genEclipseRuns);
+        this.eclipse = SlimeLauncherExec.registerEclipse(project, main, options, genEclipseRuns);
+        this.eclipseTest = SlimeLauncherExec.registerEclipse(project, test, options, genEclipseRuns);
 
-        this.run = SlimeLauncherExec.register(project, main, options, version, metadata);
-        this.runTest = SlimeLauncherExec.register(project, test, options, version, metadata);
+        this.run = SlimeLauncherExec.register(project, main, options);
+        this.runTest = SlimeLauncherExec.register(project, test, options);
+
+        var ensured = cacheDir.map(this.extension.getProblems().ensureFileLocation());
+        eclipse(task -> task.getCacheDir().set(ensured));
+        eclipseTest(task -> task.getCacheDir().set(ensured));
+        run(task -> task.getCacheDir().set(ensured));
+        runTest(task -> task.getCacheDir().set(ensured));
     }
 
     @Override
@@ -56,6 +68,9 @@ public abstract class Run implements Named {
         return this.name;
     }
 
+    public void setMetadaa(FileCollection metadata) {
+        metadata(metadata);
+    }
     public void metadata(FileCollection metadata) {
         eclipse(task -> task.getMetadata().setFrom(metadata));
         eclipseTest(task -> task.getMetadata().setFrom(metadata));
@@ -63,8 +78,15 @@ public abstract class Run implements Named {
         runTest(task -> task.getMetadata().setFrom(metadata));
     }
 
+    public void setMetadata(Provider<File> metadata) {
+        metadata(metadata);
+    }
     public void metadata(Provider<File> metadata) {
         metadata(this.project.files(metadata));
+    }
+
+    public DirectoryProperty getCache() {
+        return this.cacheDir;
     }
 
     public SlimeLauncherOptionsImpl getOptions() {

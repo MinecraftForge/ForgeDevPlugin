@@ -25,11 +25,11 @@ import net.minecraftforge.forgedev.tasks.userdev.UserDev;
 import net.minecraftforge.forgedev.values.GitVersionValueSource;
 import net.minecraftforge.forgedev.values.MavenArtifact;
 import net.minecraftforge.forgedev.values.MinecraftFiles;
-import org.apache.commons.lang3.Validate;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.artifacts.ResolvableConfiguration;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.file.DirectoryProperty;
@@ -54,6 +54,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipFile;
 
 // TODO [ForgeDev] Hide this and make a public interface
@@ -64,6 +65,7 @@ public abstract class ForgeDevExtension {
     private static final Attribute<String> OS = Attribute.of("net.minecraftforge.native.operatingSystem", String.class);
     private static final Attribute<String> MAPPINGS_CHANNEL = Attribute.of("net.minecraftforge.mappings.channel", String.class);
     private static final Attribute<String> MAPPINGS_VERSION = Attribute.of("net.minecraftforge.mappings.version", String.class);
+    private static final Attribute<String> FILE_TYPE = Attribute.of("net.minecraftforge.gradle.file.type", String.class);
 
     private final ForgeDevProblems problems = this.getObjects().newInstance(ForgeDevProblems.class);
 
@@ -83,7 +85,7 @@ public abstract class ForgeDevExtension {
         this.mavenizerRepo.set(plugin.globalCaches().dir("repo").map(this.problems.ensureFileLocation()));
         this.project = project;
         this.isCi = getProviders().of(CIRuntime.class, it -> {});
-        this.setup(plugin, project);
+        mergeSourceSets(this.problems, this.project);
     }
 
     // NOTE: Pass into RepositoryHandler#maven
@@ -198,9 +200,18 @@ public abstract class ForgeDevExtension {
     private NamedDomainObjectContainer<Run> runs;
     public NamedDomainObjectContainer<? extends Run> getRuns() {
         if (this.runs == null) {
-            this.runs = this.getObjects().domainObjectContainer(Run.class, name ->
-                getObjects().newInstance(Run.class, name, this.project, getGenEclipseRuns(), getMcpBase().getMcpVersion().get(), getMcpBase().getMetadata())
-            );
+            this.runs = this.getObjects().domainObjectContainer(Run.class, name -> {
+                var run = getObjects().newInstance(Run.class, name, this, this.project, getGenEclipseRuns());
+                if (this.base != null) {
+                    run.getCache().set(
+                        getPlugin().globalCaches().dir(
+                            "slime-launcher/cache/%s".formatted(this.getMcpBase().getMcpVersion().get())
+                        ).map(this.getProblems().ensureFileLocation())
+                    );
+                    run.metadata(this.getMcpBase().getMetadata());
+                }
+                return run;
+            });
         }
         return this.runs;
     }
@@ -212,7 +223,7 @@ public abstract class ForgeDevExtension {
 
     // region Validate Artifacts ===========================================
     // Publish validation task, the intention of this is to provide a diff of what this version and the last released version
-    // actually publish, so that we can know what actually changes between vesions.
+    // actually publish, so that we can know what actually changes between versions.
     // Mainly this is for validating converting to ForgeDev from ForgeGradle
     // =====================================================================
     private ValidatePublish.@Nullable Consumer validatePublish = null;
@@ -319,7 +330,7 @@ public abstract class ForgeDevExtension {
 
     // region Installer ====================================================
     // =====================================================================
-    private Map<String, Installer> installers = new HashMap<>();
+    private final Map<String, Installer> installers = new HashMap<>();
     public Installer getInstaller() {
         return installer(Installer.DEFAULT_NAME);
     }
@@ -482,23 +493,48 @@ public abstract class ForgeDevExtension {
     }
     // endregion ===========================================================
 
-    private void setup(ForgeDevPlugin plugin, Project project) {
-        var sourceSetsDir = this.getObjects().directoryProperty().value(this.getProjectLayout().getBuildDirectory().dir("sourceSets"));
-        var mergeSourceSets = this.problems.test("net.minecraftforge.gradle.merge-source-sets");
-        project.getExtensions().getByType(JavaPluginExtension.class).getSourceSets().configureEach(sourceSet -> {
-            if (mergeSourceSets) {
-                // This is documented in SourceSetOutput's javadoc comment
-                var unifiedDir = sourceSetsDir.dir(sourceSet.getName());
-                sourceSet.getOutput().setResourcesDir(unifiedDir);
-                sourceSet.getJava().getDestinationDirectory().set(unifiedDir);
-            }
+    // region Sharing Files Between projects ===============================
+    // Following 'best practices' defined in https://docs.gradle.org/current/userguide/how_to_share_outputs_between_projects.html
+    private final Set<String> files = new HashSet<>();
+    public void provideFile(String name, Object file) {
+        var cfg = this.project.getConfigurations().consumable("provider" + Util.capitalize(name), c ->
+            c.attributes(attr -> attr.attribute(FILE_TYPE, name))
+        );
+        this.project.getArtifacts().add(cfg.getName(), file);
+    }
 
-            project.getPluginManager().withPlugin("eclipse", eclipsePlugin -> {
-                var eclipse = project.getExtensions().getByType(EclipseModel.class);
-                if (mergeSourceSets)
-                    eclipse.getClasspath().setDefaultOutputDir(sourceSetsDir.getAsFile().get());
-                else
-                    System.out.println("WARNING: Source set will not be merged for " + sourceSet.getName() + "!");
+    public Provider<ResolvableConfiguration> consumeFile(String name, Project project) {
+        var cfgName = "consumer" + Util.capitalize(project.getName()) + Util.capitalize(name);
+        var deps = this.project.getConfigurations().dependencyScope(cfgName + "Dependencies");
+        var resolvable = this.project.getConfigurations().resolvable(cfgName, cfg -> {
+            cfg.extendsFrom(deps.get());
+            cfg.attributes(attr -> attr.attribute(FILE_TYPE, name));
+        });
+        this.project.getDependencies().add(deps.getName(), project);
+        return resolvable;
+    }
+    // endregion ===========================================================
+
+    private static void mergeSourceSets(ForgeDevProblems problems, Project project) {
+        var sourceSetsDir = project.getObjects().directoryProperty().value(project.getLayout().getBuildDirectory().dir("sourceSets"));
+        var mergeSourceSets = problems.test("net.minecraftforge.gradle.merge-source-sets");
+        project.getPluginManager().withPlugin("java", javaAppliedPlugin -> {
+            var java = project.getExtensions().getByType(JavaPluginExtension.class);
+            java.getSourceSets().configureEach(sourceSet -> {
+                if (mergeSourceSets) {
+                    // This is documented in SourceSetOutput's javadoc comment
+                    var unifiedDir = sourceSetsDir.dir(sourceSet.getName());
+                    sourceSet.getOutput().setResourcesDir(unifiedDir);
+                    sourceSet.getJava().getDestinationDirectory().set(unifiedDir);
+                }
+
+                project.getPluginManager().withPlugin("eclipse", eclipsePlugin -> {
+                    var eclipse = project.getExtensions().getByType(EclipseModel.class);
+                    if (mergeSourceSets)
+                        eclipse.getClasspath().setDefaultOutputDir(sourceSetsDir.getAsFile().get());
+                    else
+                        System.out.println("WARNING: Source set will not be merged for " + sourceSet.getName() + "!");
+                });
             });
         });
     }

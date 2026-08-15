@@ -73,7 +73,7 @@ public abstract class SlimeLauncherEclipseConfiguration extends DefaultTask impl
 
     protected abstract @Nested Property<SlimeLauncherOptions> getOptions();
 
-    protected abstract @Internal DirectoryProperty getCacheDir();
+    public abstract @Internal DirectoryProperty getCacheDir();
 
     public abstract @InputFiles ConfigurableFileCollection getMetadata();
 

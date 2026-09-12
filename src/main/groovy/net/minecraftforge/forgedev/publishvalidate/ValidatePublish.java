@@ -26,6 +26,13 @@ public class ValidatePublish {
     private static boolean enabled(Project project) {
         return "true".equalsIgnoreCase(project.getProviders().gradleProperty("net.minecraftforge.forgedev.validate.publish").getOrElse("false"));
     }
+    public static void apply(Project project) {
+        if (!enabled(project))
+            return;
+
+        project.getPluginManager().withPlugin("maven-publish", maven -> ValidatePublish.onApplyMavenPublish(project));
+    }
+
     // Creates a consumable {NAME} configuration, with the usage of {NAME}
     // and forces all publication tasks publish to a flat folder in our builder folder
     public static void onApplyMavenPublish(Project project) {

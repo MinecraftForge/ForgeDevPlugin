@@ -6,7 +6,6 @@ package net.minecraftforge.forgedev;
 
 import net.minecraftforge.forgedev.base.MCPBase;
 import net.minecraftforge.forgedev.base.MCPBaseImpl;
-import net.minecraftforge.forgedev.values.CIRuntime;
 import net.minecraftforge.forgedev.patches.BinaryPatches;
 import net.minecraftforge.forgedev.patches.BinaryPatchesImpl;
 import net.minecraftforge.forgedev.patches.Patches;
@@ -22,6 +21,7 @@ import net.minecraftforge.forgedev.tasks.compat.UserdevCompatibilityImpl;
 import net.minecraftforge.forgedev.tasks.installer.Installer;
 import net.minecraftforge.forgedev.tasks.shim.Shim;
 import net.minecraftforge.forgedev.tasks.userdev.UserDev;
+import net.minecraftforge.forgedev.values.CIRuntime;
 import net.minecraftforge.forgedev.values.GitVersionValueSource;
 import net.minecraftforge.forgedev.values.MavenArtifact;
 import net.minecraftforge.forgedev.values.MinecraftFiles;
@@ -36,7 +36,6 @@ import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileTreeElement;
 import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.model.ObjectFactory;
-import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.specs.Spec;
@@ -44,7 +43,6 @@ import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.AbstractArchiveTask;
 import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.language.base.plugins.LifecycleBasePlugin;
-import org.gradle.plugins.ide.eclipse.model.EclipseModel;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.jspecify.annotations.Nullable;
 
@@ -65,34 +63,40 @@ public abstract class ForgeDevExtension {
     private static final Attribute<String> OS = Attribute.of("net.minecraftforge.native.operatingSystem", String.class);
     private static final Attribute<String> MAPPINGS_CHANNEL = Attribute.of("net.minecraftforge.mappings.channel", String.class);
     private static final Attribute<String> MAPPINGS_VERSION = Attribute.of("net.minecraftforge.mappings.version", String.class);
-    private static final Attribute<String> FILE_TYPE = Attribute.of("net.minecraftforge.gradle.file.type", String.class);
 
-    private final ForgeDevProblems problems = this.getObjects().newInstance(ForgeDevProblems.class);
-
-    private final DirectoryProperty mavenizerRepo = this.getObjects().directoryProperty();
-
-    protected abstract @Inject ObjectFactory getObjects();
-    protected abstract @Inject ProviderFactory getProviders();
     protected abstract @Inject ProjectLayout getProjectLayout();
+    protected abstract @Inject ProviderFactory getProviders();
+    protected abstract @Inject ObjectFactory getObjects();
 
     private final ForgeDevPlugin plugin;
     private final Project project;
-    private final Provider<Boolean> isCi;
 
     @Inject
     public ForgeDevExtension(ForgeDevPlugin plugin, Project project) {
         this.plugin = plugin;
-        this.mavenizerRepo.set(plugin.globalCaches().dir("repo").map(this.problems.ensureFileLocation()));
         this.project = project;
-        this.isCi = getProviders().of(CIRuntime.class, it -> {});
-        mergeSourceSets(this.problems, this.project);
+
+        // Note: A MAJOR design factor of this extension is that EVERYTHING is opt-in.
+        // Nothing is added to the project by applying this extension
+        // Almost every field **should** be lazily initialized and grouped with their specific region.
+        // Typically right above their get method.
+        // If Java had a way to do fields in interfaces, this would be split into multiple interfaces around each region.
+        // But we don't so giant file it is!
+
+        this.mavenizerRepo.set(plugin.globalCaches().dir("repo").map(getProblems().ensureFileLocation()));
     }
 
+    public ForgeDevPlugin getPlugin() {
+        return this.plugin;
+    }
+
+    // region Mavenizer Stuff ==============================================
     // NOTE: Pass into RepositoryHandler#maven
+    private final DirectoryProperty mavenizerRepo = this.getObjects().directoryProperty();
     public Action<? super MavenArtifactRepository> getMavenizer() {
         return repo -> {
             repo.setName("Mavenizer");
-            repo.setUrl(this.mavenizerRepo);
+            repo.setUrl(this.getMavenizerRepo());
         };
     }
 
@@ -100,17 +104,26 @@ public abstract class ForgeDevExtension {
     public DirectoryProperty getMavenizerRepo() {
         return this.mavenizerRepo;
     }
+    // endregion ===========================================================
 
+    // region Helpers that don't belong else ware ==========================
+    private final ForgeDevProblems problems = this.getObjects().newInstance(ForgeDevProblems.class);
+    public ForgeDevProblems getProblems() {
+        return this.problems;
+    }
+
+    private final Provider<Boolean> isCi = getProviders().of(CIRuntime.class, it -> {});
     public boolean isCi() {
         return this.isCi.get();
     }
 
-    // Couple helpers
+    private final Provider<String> os = getProviders().of(OSValueSource.class, it -> {});
+    public String getOs() {
+        return this.os.get();
+    }
+
     public MavenArtifact getMavenArtifact() {
         return mavenArtifact(this.project);
-    }
-    public ForgeDevProblems getProblems() {
-        return this.problems;
     }
     public MavenArtifact mavenArtifact(Project project) {
         return MavenArtifact.from(project);
@@ -120,9 +133,6 @@ public abstract class ForgeDevExtension {
     }
     public Provider<MavenArtifact> mavenArtifact(Provider<?> provider) {
         return MavenArtifact.from(this.getObjects(), provider);
-    }
-    public ForgeDevPlugin getPlugin() {
-        return this.plugin;
     }
 
     // Replaces the need for the FilterNew tasks, we just want to remove the vanilla classes from our jar
@@ -160,6 +170,7 @@ public abstract class ForgeDevExtension {
             return false;
         };
     }
+    // endregion ===========================================================
 
     // Tasks creation helpers
 
@@ -201,7 +212,7 @@ public abstract class ForgeDevExtension {
     public NamedDomainObjectContainer<? extends Run> getRuns() {
         if (this.runs == null) {
             this.runs = this.getObjects().domainObjectContainer(Run.class, name -> {
-                var run = getObjects().newInstance(Run.class, name, this, this.project, getGenEclipseRuns());
+                var run = getObjects().newInstance(Run.class, name, getProblems(), this.project, getGenEclipseRuns());
                 if (this.base != null) {
                     run.getCache().set(
                         getPlugin().globalCaches().dir(
@@ -274,7 +285,7 @@ public abstract class ForgeDevExtension {
     // =====================================================================
     private final Map<String, MinecraftFiles> minecraftFiles = new HashMap<>();
     public MinecraftFiles minecraftFiles(String version) {
-        var ret =  this.minecraftFiles.get(version);
+        var ret = this.minecraftFiles.get(version);
         if (ret == null) {
             ret = this.getObjects().newInstance(MinecraftFiles.class, this.project, this.plugin, version);
             this.minecraftFiles.put(version, ret);
@@ -308,7 +319,7 @@ public abstract class ForgeDevExtension {
     // =====================================================================
     private final Map<String, PatchesImpl> patches = new HashMap<>();
     public Patches getPatches(String name) {
-        var ret =  this.patches.get(name);
+        var ret = this.patches.get(name);
         if (ret == null) {
             ret = getObjects().newInstance(PatchesImpl.class, this, name, this.project);
             this.patches.put(name, ret);
@@ -456,7 +467,7 @@ public abstract class ForgeDevExtension {
     // region Binary Patches ===============================================
     private final Map<String, BinaryPatches> binaryPatches = new HashMap<>();
     public BinaryPatches binaryPatches(String name) {
-        var ret =  this.binaryPatches.get(name);
+        var ret = this.binaryPatches.get(name);
         if (ret == null) {
             ret = getObjects().newInstance(BinaryPatchesImpl.class, name, this, this.project.getTasks());
             if (this.base != null) {
@@ -495,6 +506,7 @@ public abstract class ForgeDevExtension {
 
     // region Sharing Files Between projects ===============================
     // Following 'best practices' defined in https://docs.gradle.org/current/userguide/how_to_share_outputs_between_projects.html
+    private static final Attribute<String> FILE_TYPE = Attribute.of("net.minecraftforge.gradle.file.type", String.class);
     private final Set<String> files = new HashSet<>();
     public void provideFile(String name, Object file) {
         var cfg = this.project.getConfigurations().consumable("provider" + Util.capitalize(name), c ->
@@ -503,39 +515,19 @@ public abstract class ForgeDevExtension {
         this.project.getArtifacts().add(cfg.getName(), file);
     }
 
+    private final Map<String, Provider<ResolvableConfiguration>> consumers = new HashMap<>();
     public Provider<ResolvableConfiguration> consumeFile(String name, Project project) {
         var cfgName = "consumer" + Util.capitalize(project.getName()) + Util.capitalize(name);
-        var deps = this.project.getConfigurations().dependencyScope(cfgName + "Dependencies");
-        var resolvable = this.project.getConfigurations().resolvable(cfgName, cfg -> {
-            cfg.extendsFrom(deps.get());
-            cfg.attributes(attr -> attr.attribute(FILE_TYPE, name));
-        });
-        this.project.getDependencies().add(deps.getName(), project);
-        return resolvable;
-    }
-    // endregion ===========================================================
+        return consumers.computeIfAbsent(cfgName, prefix -> {
+            var deps = this.project.getConfigurations().dependencyScope(prefix + "Dependencies");
+            var projectDep = this.project.getDependencyFactory().createProjectDependency(project.getPath());
+            this.project.getDependencies().add(deps.getName(), projectDep);
 
-    private static void mergeSourceSets(ForgeDevProblems problems, Project project) {
-        var sourceSetsDir = project.getObjects().directoryProperty().value(project.getLayout().getBuildDirectory().dir("sourceSets"));
-        var mergeSourceSets = problems.test("net.minecraftforge.gradle.merge-source-sets");
-        project.getPluginManager().withPlugin("java", javaAppliedPlugin -> {
-            var java = project.getExtensions().getByType(JavaPluginExtension.class);
-            java.getSourceSets().configureEach(sourceSet -> {
-                if (mergeSourceSets) {
-                    // This is documented in SourceSetOutput's javadoc comment
-                    var unifiedDir = sourceSetsDir.dir(sourceSet.getName());
-                    sourceSet.getOutput().setResourcesDir(unifiedDir);
-                    sourceSet.getJava().getDestinationDirectory().set(unifiedDir);
-                }
-
-                project.getPluginManager().withPlugin("eclipse", eclipsePlugin -> {
-                    var eclipse = project.getExtensions().getByType(EclipseModel.class);
-                    if (mergeSourceSets)
-                        eclipse.getClasspath().setDefaultOutputDir(sourceSetsDir.getAsFile().get());
-                    else
-                        System.out.println("WARNING: Source set will not be merged for " + sourceSet.getName() + "!");
-                });
+            return this.project.getConfigurations().resolvable(prefix, cfg -> {
+                cfg.extendsFrom(deps.get());
+                cfg.attributes(attr -> attr.attribute(FILE_TYPE, name));
             });
         });
     }
+    // endregion ===========================================================
 }

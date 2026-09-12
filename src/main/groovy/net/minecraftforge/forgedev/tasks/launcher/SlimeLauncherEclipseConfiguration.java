@@ -53,7 +53,7 @@ import java.util.Map;
 
 // This is mostly taken from ForgeGradle 6 but slimmed down to what we need
 public abstract class SlimeLauncherEclipseConfiguration extends DefaultTask implements ForgeDevTask {
-    protected abstract @OutputFile RegularFileProperty getOutputFile();
+    public abstract @OutputFile RegularFileProperty getOutputFile();
 
     protected abstract @Input Property<String> getProjectName();
 

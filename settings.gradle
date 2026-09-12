@@ -32,7 +32,7 @@ dependencyResolutionManagement.versionCatalogs.register('libs') {
     library 'nulls', 'org.jetbrains', 'annotations' version '26.0.2-1'
 
     // Gradle API
-    version 'gradle', '9.2.0'
+    version 'gradle', '9.7.1'
     library 'gradle', 'name.remal.gradle-api', 'gradle-api'  versionRef 'gradle'
 
     // GradleUtils Shared Base

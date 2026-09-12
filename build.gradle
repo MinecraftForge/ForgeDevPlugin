@@ -51,7 +51,7 @@ dependencies {
 }
 
 license {
-    header = rootProject.file('LICENSE-header.txt')
+    header = file('LICENSE-header.txt')
     newLine = false
     exclude '**/*.properties'
 }
@@ -87,11 +87,6 @@ gradlePlugin {
             displayName = gradleutils.displayName.get()
             description = project.description
             tags = ['minecraftforge']
-        }
-
-        register('convention') {
-            id = 'net.minecraftforge.forge.build.convention'
-            implementationClass = 'net.minecraftforge.forgedev.legacy.SharedBuildPlugin'
         }
     }
 }

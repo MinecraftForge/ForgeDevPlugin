@@ -16,11 +16,14 @@ import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.AbstractArchiveTask;
@@ -33,10 +36,11 @@ import java.nio.file.Files;
 import java.util.TreeMap;
 import java.util.zip.ZipFile;
 
+@CacheableTask
 public abstract class ShimClasspath extends DefaultTask implements ForgeDevTask, SingleFileOutput {
-    @InputFiles public abstract ConfigurableFileCollection getInput();
+    @InputFiles @PathSensitive(PathSensitivity.NONE) public abstract ConfigurableFileCollection getInput();
     @Input public abstract ListProperty<MinimalResolvedArtifact> getLibraries();
-    @InputFile @Optional public abstract RegularFileProperty getServerBundle();
+    @InputFile @PathSensitive(PathSensitivity.NONE) @Optional public abstract RegularFileProperty getServerBundle();
     @Override @OutputFile public abstract RegularFileProperty getOutput();
 
     public ShimClasspath() {

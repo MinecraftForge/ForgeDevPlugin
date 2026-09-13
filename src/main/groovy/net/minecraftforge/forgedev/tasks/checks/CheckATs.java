@@ -12,6 +12,9 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.work.DisableCachingByDefault;
 import org.objectweb.asm.Opcodes;
 
 import java.io.File;
@@ -26,10 +29,11 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.ToIntFunction;
 
+@DisableCachingByDefault(because = "No output files")
 public abstract class CheckATs extends CheckTask {
-    @InputFile public abstract RegularFileProperty getInheritance();
-    @InputFiles public abstract ConfigurableFileCollection getAts();
-    @InputFile @Optional public abstract RegularFileProperty getMappings();
+    @InputFile @PathSensitive(PathSensitivity.NONE) public abstract RegularFileProperty getInheritance();
+    @InputFiles @PathSensitive(PathSensitivity.NONE) public abstract ConfigurableFileCollection getAts();
+    @InputFile @PathSensitive(PathSensitivity.NONE) @Optional public abstract RegularFileProperty getMappings();
 
     @Override
     protected void check(Reporter reporter, boolean fix) throws Exception {

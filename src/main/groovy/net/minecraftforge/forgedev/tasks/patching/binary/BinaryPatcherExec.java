@@ -12,16 +12,20 @@ import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 
 import javax.inject.Inject;
 
+@CacheableTask
 abstract class BinaryPatcherExec extends ToolExec implements SingleFileOutput {
     // Shared
-    public abstract @InputFiles ConfigurableFileCollection getClean();
+    public abstract @InputFiles @PathSensitive(PathSensitivity.NONE) ConfigurableFileCollection getClean();
     public abstract @Input @Optional ListProperty<String> getPrefix();
     public abstract @Input Property<Boolean> getPack200();
     public abstract @Deprecated @Input Property<Boolean> getLegacy();

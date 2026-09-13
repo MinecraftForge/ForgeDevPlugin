@@ -9,22 +9,27 @@ import net.minecraftforge.forgedev.tasks.ToolExec;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.CompileClasspath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.process.ExecResult;
+import org.gradle.work.DisableCachingByDefault;
 
 import javax.inject.Inject;
 import java.io.IOException;
 
+@DisableCachingByDefault(because = "There is no output")
 public abstract class CheckJarCompatibility extends ToolExec {
-    abstract @InputFile RegularFileProperty getBaseJar();
-    abstract @InputFile RegularFileProperty getInputJar();
+    abstract @InputFile @PathSensitive(PathSensitivity.NONE) RegularFileProperty getBaseJar();
+    abstract @InputFile @PathSensitive(PathSensitivity.NONE) RegularFileProperty getInputJar();
 
-    abstract @InputFiles ConfigurableFileCollection getCommonLibraries();
-    abstract @InputFiles ConfigurableFileCollection getBaseLibraries();
-    abstract @InputFiles ConfigurableFileCollection getConcreteLibraries();
+    abstract @InputFiles @PathSensitive(PathSensitivity.NONE) ConfigurableFileCollection getCommonLibraries();
+    abstract @InputFiles @PathSensitive(PathSensitivity.NONE) ConfigurableFileCollection getBaseLibraries();
+    abstract @InputFiles @PathSensitive(PathSensitivity.NONE) ConfigurableFileCollection getConcreteLibraries();
 
     abstract @Input @Optional Property<Boolean> getBinary();
     abstract @Input @Optional Property<String> getAnnotationCheckMode();

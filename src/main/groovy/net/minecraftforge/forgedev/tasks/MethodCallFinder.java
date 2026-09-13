@@ -12,10 +12,13 @@ import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.SetProperty;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Nested;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
@@ -38,12 +41,13 @@ import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+@CacheableTask
 public abstract class MethodCallFinder extends DefaultTask implements SingleFileOutput {
     private static final Gson GSON = new GsonBuilder()
         .setPrettyPrinting()
         .create();
 
-    @InputFile public abstract RegularFileProperty getJar();
+    @InputFile @PathSensitive(PathSensitivity.NONE) public abstract RegularFileProperty getJar();
     @Input public abstract Property<Boolean> getAllowEmpty();
     @Input public abstract SetProperty<String> getBlacklist();
     @Input public abstract Property<MethodReference> getTarget();

@@ -24,8 +24,11 @@ import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
+import org.gradle.work.DisableCachingByDefault;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -34,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@DisableCachingByDefault(because = "Caching of an execution task doesn't make sense")
 public abstract class SlimeLauncherExec extends JavaExec implements ForgeDevTask, HasPublicType {
     public static TaskProvider<SlimeLauncherEclipseConfiguration> registerEclipse(Project project, SourceSet sourceSet, SlimeLauncherOptionsImpl options, TaskProvider<?> genEclipseRuns) {
         var generateEclipseRunTaskName = sourceSet.getTaskName("genEclipseRun", options.getName());
@@ -91,7 +95,7 @@ public abstract class SlimeLauncherExec extends JavaExec implements ForgeDevTask
 
     public abstract @Internal DirectoryProperty getCacheDir();
 
-    public abstract @InputFiles ConfigurableFileCollection getMetadata();
+    public abstract @InputFiles @PathSensitive(PathSensitivity.NONE) ConfigurableFileCollection getMetadata();
 
     protected abstract @Input @Optional Property<Boolean> getClient();
 

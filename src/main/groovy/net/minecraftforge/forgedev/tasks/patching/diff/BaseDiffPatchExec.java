@@ -17,9 +17,13 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.work.DisableCachingByDefault;
 
 import javax.inject.Inject;
 
+@DisableCachingByDefault(because = "I don't think this is cacheable")
 public abstract class BaseDiffPatchExec extends ToolExec implements SingleFileOutput {
     /* CLI FLAGS - See io.codechicken.diffpatch.cli.DiffPatchCli#mainI, or run --help on the fat jar */
 
@@ -28,7 +32,7 @@ public abstract class BaseDiffPatchExec extends ToolExec implements SingleFileOu
     public abstract @Console Property<String> getLogLevel();
     public abstract @Console Property<Boolean> getSummary();
 
-    public abstract @InputFiles ConfigurableFileCollection getInput();
+    public abstract @InputFiles @PathSensitive(PathSensitivity.RELATIVE) ConfigurableFileCollection getInput();
 
     public abstract @OutputFile RegularFileProperty getOutput();
     public abstract @Optional @OutputDirectory DirectoryProperty getOutputDirectory();

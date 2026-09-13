@@ -37,6 +37,7 @@ import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
@@ -56,6 +57,7 @@ import java.util.zip.ZipFile;
 
 // TODO SUPER SUPER SUPER UGLY, CLEAN UP IN FORGEDEV 7
 @Deprecated(forRemoval = true) // Will be moved to JarJar plugin in ForgeDev 7
+@CacheableTask
 public abstract class JarJarMetadataOptions extends DefaultTask {
     private static final Gson GSON = new GsonBuilder()
         .registerTypeAdapter(VersionRange.class, new VersionRangeSerializer())

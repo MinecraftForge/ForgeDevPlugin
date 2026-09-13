@@ -27,6 +27,7 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.tasks.*;
 import org.gradle.api.tasks.bundling.AbstractArchiveTask;
+import org.gradle.work.DisableCachingByDefault;
 
 import javax.inject.Inject;
 import java.io.File;
@@ -42,6 +43,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+@DisableCachingByDefault(because = "Caching the libraries would be complex, so not sure how to do it")
 public abstract class InstallerJson extends DefaultTask {
     private static final Gson GSON = new GsonBuilder()
         .disableHtmlEscaping()
@@ -53,8 +55,8 @@ public abstract class InstallerJson extends DefaultTask {
 
     @OutputFile public abstract RegularFileProperty getOutput();
 
-    @InputFiles public abstract ConfigurableFileCollection getInput();
-    @InputFile @Optional public abstract RegularFileProperty getIcon();
+    @InputFiles @PathSensitive(PathSensitivity.NONE) public abstract ConfigurableFileCollection getInput();
+    @InputFile @PathSensitive(PathSensitivity.NONE) @Optional public abstract RegularFileProperty getIcon();
     @Input public abstract Property<String> getLauncherJsonName();
     @Input public abstract Property<String> getLogo();
     @Input public abstract Property<String> getMirrors();

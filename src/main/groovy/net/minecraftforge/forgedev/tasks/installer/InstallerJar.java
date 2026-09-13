@@ -7,12 +7,16 @@ package net.minecraftforge.forgedev.tasks.installer;
 import net.minecraftforge.forgedev.legacy.values.MinimalResolvedArtifact;
 import org.gradle.api.file.DuplicatesStrategy;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.api.tasks.bundling.Zip;
+import org.gradle.work.DisableCachingByDefault;
 import org.jetbrains.annotations.ApiStatus;
 
 import javax.inject.Inject;
 
+@DisableCachingByDefault(because = "Not worth caching")
 public abstract class InstallerJar extends Jar {
     @Inject
     public InstallerJar() {

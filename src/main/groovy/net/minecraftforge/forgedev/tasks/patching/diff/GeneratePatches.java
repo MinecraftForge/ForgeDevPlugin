@@ -16,7 +16,10 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.process.ExecResult;
+import org.gradle.work.DisableCachingByDefault;
 import org.jspecify.annotations.Nullable;
 
 import javax.inject.Inject;
@@ -31,8 +34,9 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+@DisableCachingByDefault(because = "Don't know how to cache this")
 public abstract class GeneratePatches extends BaseDiffPatchExec {
-    public abstract @InputFiles ConfigurableFileCollection getModified();
+    public abstract @InputFiles @PathSensitive(PathSensitivity.RELATIVE) ConfigurableFileCollection getModified();
     public abstract @OutputFile RegularFileProperty getOutput();
     public abstract @Optional @OutputDirectory DirectoryProperty getOutputDirectory();
 

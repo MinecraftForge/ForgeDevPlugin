@@ -8,10 +8,12 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.work.DisableCachingByDefault;
 
 import java.io.File;
 import java.util.Objects;
 
+@DisableCachingByDefault(because = "No output")
 public abstract class DeleteDirectoryTask extends DefaultTask {
     @Internal
     abstract RegularFileProperty getDirectory();

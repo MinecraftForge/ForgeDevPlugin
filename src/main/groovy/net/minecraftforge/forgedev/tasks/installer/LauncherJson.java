@@ -25,8 +25,11 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
+import org.gradle.work.DisableCachingByDefault;
 import org.jetbrains.annotations.ApiStatus;
 
 import javax.inject.Inject;
@@ -39,6 +42,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+@DisableCachingByDefault(because = "Library caching would be complex")
 public abstract class LauncherJson extends DefaultTask {
     private static final Gson GSON = new GsonBuilder()
         .disableHtmlEscaping()
@@ -50,7 +54,7 @@ public abstract class LauncherJson extends DefaultTask {
 
     @OutputFile public abstract RegularFileProperty getOutput();
 
-    @InputFiles public abstract ConfigurableFileCollection getInput();
+    @InputFiles @PathSensitive(PathSensitivity.NONE) public abstract ConfigurableFileCollection getInput();
     @Input public abstract Property<String> getTimestamp();
     @Input public abstract Property<String> getReleaseTime();
     @Input public abstract Property<String> getId();

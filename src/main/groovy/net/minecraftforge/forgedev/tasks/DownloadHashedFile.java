@@ -13,12 +13,14 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.work.DisableCachingByDefault;
 
 import javax.inject.Inject;
 import java.io.IOException;
 
 // This is a quick replacement for https://github.com/michel-kraemer/gradle-download-task
 // Which we only use for downloading crowdin, could expand to any hashed file, but for now it's mainly just for that
+@DisableCachingByDefault(because = "We want to react to the server updateing the file, we do hash checking ourselves")
 public abstract class DownloadHashedFile extends DefaultTask implements ForgeDevTask, SingleFileOutput {
     public abstract @Input Property<String> getSrc();
     public abstract @Override @OutputFile RegularFileProperty getOutput();

@@ -12,6 +12,9 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.work.DisableCachingByDefault;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -23,9 +26,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+@DisableCachingByDefault(because = "Validation tasks dont have outputs")
 public abstract class CheckSAS extends CheckTask {
-    @InputFile public abstract RegularFileProperty getInheritance();
-    @InputFiles public abstract ConfigurableFileCollection getSass();
+    @InputFile @PathSensitive(PathSensitivity.NONE) public abstract RegularFileProperty getInheritance();
+    @InputFiles @PathSensitive(PathSensitivity.NONE) public abstract ConfigurableFileCollection getSass();
     @Input public abstract Property<String> getAnnotation();
 
     @Inject

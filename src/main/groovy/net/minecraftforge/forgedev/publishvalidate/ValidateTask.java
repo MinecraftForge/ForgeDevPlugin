@@ -23,7 +23,10 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.work.DisableCachingByDefault;
 import org.jspecify.annotations.Nullable;
 
 import javax.inject.Inject;
@@ -38,12 +41,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@DisableCachingByDefault(because = "Validate tasks have no outputs")
 public abstract class ValidateTask extends DefaultTask {
     private static final Gson GSON = new GsonBuilder()
         .disableHtmlEscaping()
         .setPrettyPrinting()
         .create();
-    public abstract @InputFiles ConfigurableFileCollection getFiles();
+    public abstract @InputFiles @PathSensitive(PathSensitivity.NONE) ConfigurableFileCollection getFiles();
     public abstract @Input MapProperty<String, String> getBaseVersions();
     public abstract @Input Property<String> getBaseBranch();
     public abstract @Optional @Input Property<String> getVersionPrefix();

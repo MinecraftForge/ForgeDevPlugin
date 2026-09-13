@@ -27,10 +27,13 @@ import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderConvertible;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 
@@ -45,6 +48,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
+@CacheableTask
 public abstract class UserdevConfig extends DefaultTask implements ForgeDevTask {
     private static final String DEFAULT_PATCHES_PREFIX_ORIGINAL = "a/";
     private static final String DEFAULT_PATCHES_PREFIX_MODIFIED = "b/";
@@ -66,9 +70,9 @@ public abstract class UserdevConfig extends DefaultTask implements ForgeDevTask 
     public abstract @Input Property<String> getSource();
     public abstract @Input @Optional Property<String> getInject();
     public abstract @Input @Optional Property<String> getPatches();
-    public abstract @InputFiles ConfigurableFileCollection getATs();
-    public abstract @InputFiles ConfigurableFileCollection getSASs();
-    public abstract @InputFiles ConfigurableFileCollection getSRGs();
+    public abstract @InputFiles @PathSensitive(PathSensitivity.NAME_ONLY) ConfigurableFileCollection getATs();
+    public abstract @InputFiles @PathSensitive(PathSensitivity.NAME_ONLY) ConfigurableFileCollection getSASs();
+    public abstract @InputFiles @PathSensitive(PathSensitivity.NAME_ONLY) ConfigurableFileCollection getSRGs();
     public abstract @Input @Optional ListProperty<String> getSRGLines();
 
     protected abstract @Input MapProperty<String, RunConfig> getRuns();

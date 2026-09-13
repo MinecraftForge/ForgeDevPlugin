@@ -10,17 +10,21 @@ import net.minecraftforge.forgedev.tasks.ToolExec;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.logging.LogLevel;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.process.ExecResult;
 
 import javax.inject.Inject;
 import java.io.IOException;
 
+@CacheableTask
 public abstract class ExtractInheritance extends ToolExec implements SingleFileOutput {
-    public abstract @InputFile RegularFileProperty getInput();
+    public abstract @InputFile @PathSensitive(PathSensitivity.NONE) RegularFileProperty getInput();
 
     public abstract @InputFiles @Classpath ConfigurableFileCollection getLibraries();
 

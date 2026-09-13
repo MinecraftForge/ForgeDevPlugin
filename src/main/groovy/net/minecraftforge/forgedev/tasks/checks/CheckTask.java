@@ -12,11 +12,13 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.VerificationTask;
 import org.gradle.language.base.plugins.LifecycleBasePlugin;
+import org.gradle.work.DisableCachingByDefault;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 
+@DisableCachingByDefault(because = "Validation tasks are not cacheable")
 public abstract class CheckTask extends DefaultTask implements VerificationTask {
     @Input public abstract Property<Boolean> getFix();
     private final Property<Boolean> ignoreFailures = getObjects().property(Boolean.class).convention(false);

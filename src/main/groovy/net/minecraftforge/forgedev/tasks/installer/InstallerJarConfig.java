@@ -19,8 +19,11 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
+import org.gradle.work.DisableCachingByDefault;
 import org.jetbrains.annotations.ApiStatus;
 
 import javax.inject.Inject;
@@ -32,11 +35,12 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 
 @ApiStatus.Internal
+@DisableCachingByDefault(because = "The libraries are complex, not sure how to cache them correctly")
 public abstract class InstallerJarConfig extends DefaultTask {
     private final Provider<Installer> installer;
     private final TaskProvider<DownloadDependency> base;
 
-    @InputFiles public abstract ConfigurableFileCollection getInput();
+    @InputFiles @PathSensitive(PathSensitivity.NONE) public abstract ConfigurableFileCollection getInput();
     @Input public abstract Property<Boolean> getDev();
     @Input public abstract Property<Boolean> getOffline();
     @Input public abstract ListProperty<MinimalResolvedArtifact> getLibraries();

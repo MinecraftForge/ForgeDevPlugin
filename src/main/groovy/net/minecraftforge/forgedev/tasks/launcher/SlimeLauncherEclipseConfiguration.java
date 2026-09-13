@@ -26,8 +26,11 @@ import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.jvm.toolchain.JavaLauncher;
+import org.gradle.work.DisableCachingByDefault;
 import org.gradle.workers.WorkAction;
 import org.gradle.workers.WorkParameters;
 import org.gradle.workers.WorkerExecutor;
@@ -52,6 +55,7 @@ import java.util.List;
 import java.util.Map;
 
 // This is mostly taken from ForgeGradle 6 but slimmed down to what we need
+@DisableCachingByDefault(because = "Not worth caching as its only run once for each workspace")
 public abstract class SlimeLauncherEclipseConfiguration extends DefaultTask implements ForgeDevTask {
     public abstract @OutputFile RegularFileProperty getOutputFile();
 
@@ -67,7 +71,7 @@ public abstract class SlimeLauncherEclipseConfiguration extends DefaultTask impl
 
     protected abstract @Input ListProperty<String> getProjectDependencies();
 
-    protected abstract @InputFiles @Classpath ConfigurableFileCollection getClasspath();
+    protected abstract @InputFiles @PathSensitive(PathSensitivity.NONE) ConfigurableFileCollection getClasspath();
 
     protected abstract @Input Property<String> getMainClass();
 
@@ -75,7 +79,7 @@ public abstract class SlimeLauncherEclipseConfiguration extends DefaultTask impl
 
     public abstract @Internal DirectoryProperty getCacheDir();
 
-    public abstract @InputFiles ConfigurableFileCollection getMetadata();
+    public abstract @InputFiles @PathSensitive(PathSensitivity.NONE) ConfigurableFileCollection getMetadata();
 
     protected abstract @Inject ObjectFactory getObjects();
 

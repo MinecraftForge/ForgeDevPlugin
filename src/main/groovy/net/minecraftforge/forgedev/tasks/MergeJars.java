@@ -8,8 +8,11 @@ import net.minecraftforge.forgedev.ForgeDevTask;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 
 import javax.inject.Inject;
@@ -23,8 +26,9 @@ import java.util.zip.ZipOutputStream;
 
 // This **could** be a standard Copy task, but Gradle still extracts ZipTrees to temporary directories, instead of dealing with them in memory.
 // So to save hard drives we do it this way
+@CacheableTask
 public abstract class MergeJars extends DefaultTask implements ForgeDevTask, SingleFileOutput {
-    public abstract @InputFiles ConfigurableFileCollection getInputJars();
+    public abstract @InputFiles @PathSensitive(PathSensitivity.NONE) ConfigurableFileCollection getInputJars();
     public abstract @Override @OutputFile RegularFileProperty getOutput();
 
     @Inject

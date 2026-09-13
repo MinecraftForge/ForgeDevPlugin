@@ -12,7 +12,10 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFiles;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.process.ExecResult;
+import org.gradle.work.DisableCachingByDefault;
 import org.jspecify.annotations.Nullable;
 
 import javax.inject.Inject;
@@ -20,8 +23,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
+@DisableCachingByDefault(because = "Part of the setup task for each workspace, don't think it's cacheable")
 public abstract class ApplyPatches extends BaseDiffPatchExec {
-    public abstract @InputFiles ConfigurableFileCollection getPatches();
+    public abstract @InputFiles @PathSensitive(PathSensitivity.RELATIVE) ConfigurableFileCollection getPatches();
     public abstract @OutputFiles @Optional ConfigurableFileCollection getRejects();
 
     // Patch specific

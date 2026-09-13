@@ -16,7 +16,10 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.work.DisableCachingByDefault;
 import org.gradle.workers.WorkAction;
 import org.gradle.workers.WorkParameters;
 import org.gradle.workers.WorkerExecutor;
@@ -30,12 +33,13 @@ import java.util.zip.ZipOutputStream;
 
 // I have not exposed this in any way, this is basically just going to be used while upgrading old branches to
 // the new toolchain so run only once.
+@DisableCachingByDefault(because = "Should only be used once per branch")
 public abstract class LegacyApplyMappings extends DefaultTask implements ForgeDevTask {
     public abstract @Input Property<Boolean> getJavadocs();
     public abstract @Input Property<Boolean> getLambdas();
 
-    public abstract @InputFile RegularFileProperty getInput();
-    public abstract @InputFiles ConfigurableFileCollection getMappings();
+    public abstract @InputFile @PathSensitive(PathSensitivity.NONE) RegularFileProperty getInput();
+    public abstract @InputFiles @PathSensitive(PathSensitivity.NONE) ConfigurableFileCollection getMappings();
     public abstract @OutputFile RegularFileProperty getOutput();
 
     @Inject

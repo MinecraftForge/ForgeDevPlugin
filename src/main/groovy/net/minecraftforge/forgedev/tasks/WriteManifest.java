@@ -11,6 +11,7 @@ import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.java.archives.Manifest;
 import org.gradle.api.java.archives.internal.ManifestInternal;
 import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.OutputFile;
@@ -23,6 +24,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 
+@CacheableTask // Should just be writing a byte[] to disk, so as long as the input data i the same we can use the cached file
 public abstract class WriteManifest extends DefaultTask implements SingleFileOutput {
     public static TaskProvider<WriteManifest> register(Project project, TaskProvider<? extends Jar> jar) {
         var write = project.getTasks().register("writeManifest", WriteManifest.class);

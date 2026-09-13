@@ -9,6 +9,9 @@ import org.gradle.api.provider.ListProperty;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.work.DisableCachingByDefault;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -18,6 +21,7 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@DisableCachingByDefault(because = "Validation tasks dont have outputs")
 public abstract class CheckPatches extends CheckTask {
     private static final Pattern HUNK_START_PATTERN = Pattern.compile("^@@ -[0-9,]* \\+[0-9,_]* @@$");
     private static final Pattern WHITESPACE_PATTERN = Pattern.compile("^[+\\-]\\s*$");
@@ -34,7 +38,7 @@ public abstract class CheckPatches extends CheckTask {
     ));
     */
 
-    @InputDirectory abstract DirectoryProperty getPatchDir();
+    @InputDirectory @PathSensitive(PathSensitivity.RELATIVE) abstract DirectoryProperty getPatchDir();
     @Input @Optional abstract ListProperty<String> getPatchesWithS2SArtifact();
 
     @Override

@@ -14,8 +14,11 @@ import org.gradle.api.artifacts.MinimalExternalModuleDependency;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ProviderFactory;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 
@@ -24,8 +27,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
+@CacheableTask
 public abstract class DownloadDependency extends DefaultTask implements SingleFileOutput, ForgeDevTask {
-    public abstract @InputFiles ConfigurableFileCollection getInput();
+    public abstract @InputFiles @PathSensitive(PathSensitivity.NONE) ConfigurableFileCollection getInput();
     public abstract @Override @OutputFile RegularFileProperty getOutput();
 
     protected abstract @Inject ProviderFactory getProviders();

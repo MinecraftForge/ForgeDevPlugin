@@ -6,18 +6,22 @@ package net.minecraftforge.forgedev.tasks.patching.binary;
 
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 
 import javax.inject.Inject;
 
+@CacheableTask
 public abstract class CreateBinPatches extends BinaryPatcherExec {
     // Create
-    public abstract @InputFiles ConfigurableFileCollection getDirty();
-    public abstract @InputFiles @Optional ConfigurableFileCollection getPatches();
-    public abstract @InputFiles @Optional ConfigurableFileCollection getSrg();
-    public abstract @InputFiles @Optional ConfigurableFileCollection getSas();
+    public abstract @InputFiles @PathSensitive(PathSensitivity.NONE) ConfigurableFileCollection getDirty();
+    public abstract @InputFiles @PathSensitive(PathSensitivity.RELATIVE) @Optional ConfigurableFileCollection getPatches();
+    public abstract @InputFiles @PathSensitive(PathSensitivity.NONE) @Optional ConfigurableFileCollection getSrg();
+    public abstract @InputFiles @PathSensitive(PathSensitivity.NONE) @Optional ConfigurableFileCollection getSas();
     public abstract @Input Property<Boolean> getReverseSrg();
 
     @Inject

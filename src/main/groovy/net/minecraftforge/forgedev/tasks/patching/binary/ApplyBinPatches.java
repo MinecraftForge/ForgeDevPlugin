@@ -6,15 +6,19 @@ package net.minecraftforge.forgedev.tasks.patching.binary;
 
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 
 import javax.inject.Inject;
 
+@CacheableTask
 public abstract class ApplyBinPatches extends BinaryPatcherExec {
     // Create
-    public abstract @InputFiles ConfigurableFileCollection getApply();
+    public abstract @InputFiles @PathSensitive(PathSensitivity.NONE) ConfigurableFileCollection getApply();
     public abstract @Input Property<Boolean> getData();
     public abstract @Input Property<Boolean> getUnpatched();
     public abstract @Input Property<Boolean> getStore();

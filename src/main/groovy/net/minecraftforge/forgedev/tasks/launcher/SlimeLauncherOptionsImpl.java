@@ -16,6 +16,7 @@ import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
+import org.jspecify.annotations.Nullable;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -114,10 +115,15 @@ public abstract class SlimeLauncherOptionsImpl implements SlimeLauncherOptionsIn
     /* NESTED */
 
     @Override
-    public void with(String sourceSetName, Action<? super SlimeLauncherOptionsNested> action) {
-        var child = getObjects().newInstance(SlimeLauncherOptionsImpl.class, this.name);
-        action.execute(child);
-        this.getNested().put(sourceSetName, child);
+    public SlimeLauncherOptionsNested with(String sourceSetName, @Nullable Action<? super SlimeLauncherOptionsNested> action) {
+        var child = this.getNested().getting(sourceSetName).getOrNull();
+        if (child == null) {
+            child = getObjects().newInstance(SlimeLauncherOptionsImpl.class, this.name);
+            this.getNested().put(sourceSetName, child);
+        }
+        if (action != null)
+            action.execute(child);
+        return child;
     }
 
     /* SETTERS */

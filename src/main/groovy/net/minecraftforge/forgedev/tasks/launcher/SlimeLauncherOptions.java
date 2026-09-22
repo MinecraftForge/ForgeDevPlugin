@@ -15,6 +15,7 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.SourceSet;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
 
@@ -22,11 +23,19 @@ public interface SlimeLauncherOptions extends SlimeLauncherOptionsNested, Named 
     @Override
     @Input String getName();
 
-    default void with(SourceSet sourceSet, Action<? super SlimeLauncherOptionsNested> action) {
-        this.with(sourceSet.getName(), action);
+    default SlimeLauncherOptionsNested with(SourceSet sourceSet) {
+        return this.with(sourceSet, null);
     }
 
-    void with(String sourceSetName, Action<? super SlimeLauncherOptionsNested> action);
+    default SlimeLauncherOptionsNested with(SourceSet sourceSet, @Nullable Action<? super SlimeLauncherOptionsNested> action) {
+        return this.with(sourceSet.getName(), action);
+    }
+
+    default SlimeLauncherOptionsNested with(String sourceSet) {
+        return this.with(sourceSet, null);
+    }
+
+    SlimeLauncherOptionsNested with(String sourceSetName, @Nullable Action<? super SlimeLauncherOptionsNested> action);
 
     /// The classpath to use.
     ///
